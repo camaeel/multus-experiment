@@ -6,6 +6,12 @@ nodes:
   extraPortMappings:
   - containerPort: 30080
     hostPort: 80
+  # kubeadmConfigPatches:
+  # - |
+  #   kind: InitConfiguration
+  #   nodeRegistration:
+  #     kubeletExtraArgs:
+  #       node-labels: "my-label=true"
 - role: worker
 - role: worker
 networking:

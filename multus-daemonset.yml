@@ -120,13 +120,50 @@ data:
     {
       "name": "multus-cni-network",
       "type": "multus",
-      "capabilities": {
-        "portMappings": true
-      },
-      "clusterNetwork": "calico",
-      "defaultNetworks": ["calico"],
+      "delegates": [
+        {
+          "name": "k8s-pod-network",
+          "cniVersion": "0.3.1",
+          "plugins": [
+            {
+              "type": "calico",
+              "log_level": "info",
+              "log_file_path": "/var/log/calico/cni/cni.log",
+              "datastore_type": "kubernetes",
+              "nodename": "__KUBERNETES_NODE_NAME__",
+              "mtu": 0,
+              "ipam": {
+                  "type": "calico-ipam"
+              },
+              "policy": {
+                  "type": "k8s"
+              },
+              "kubernetes": {
+                  "kubeconfig": "/etc/cni/net.d/calico-kubeconfig"
+              }
+            },
+            {
+              "type": "portmap",
+              "snat": true,
+              "capabilities": {"portMappings": true}
+            },
+            {
+              "type": "bandwidth",
+              "capabilities": {"bandwidth": true}
+            }
+          ]
+        },
+        {
+          "cniVersion": "0.3.1",
+          "name": "cilium",
+          "type": "cilium-cni",
+          "enable-debug": false,
+          "log-file": "/var/run/cilium/cilium-cni.log"
+        }
+      ],
       "kubeconfig": "/etc/cni/net.d/multus.d/multus.kubeconfig"
     }
+    
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -160,10 +197,20 @@ spec:
       containers:
       - name: kube-multus
         image: ghcr.io/k8snetworkplumbingwg/multus-cni:stable
-        command: ["/entrypoint.sh"]
-        args:
-        - "--multus-conf-file=auto"
-        - "--cni-version=0.3.1"
+        env:
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        command:
+        - /bin/bash
+        - -cex
+        - |
+          #!/bin/bash
+          mkdir -p /tmp/multus-conf-final
+          sed "s|__KUBERNETES_NODE_NAME__|${KUBERNETES_NODE_NAME}|g" /tmp/multus-conf/70-multus.conf > /tmp/multus-conf-final/00-multus.conf
+          # /entrypoint.sh --multus-conf-file=auto
+          /entrypoint.sh --multus-conf-file=/tmp/multus-conf-final/00-multus.conf --cni-version=0.3.1
         resources:
           requests:
             cpu: "100m"
