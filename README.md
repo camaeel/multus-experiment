@@ -9,6 +9,5 @@ Materials:
 Possible replacement to multus - cni-genie:
 https://www.linkedin.com/pulse/multi-cni-containers-network-interfaces-kubernetes-gokul-chandra
 https://github.com/cni-genie/CNI-Genie
-
-
+It doesn't look like actively maintained and doesn't support cilium. 
 
