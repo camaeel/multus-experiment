@@ -34,6 +34,7 @@ Each node exposes goldpinger as a node port as a service on ports 30080, 31080, 
 1. Install multus with calico: `./30_install_multus.sh`
 2. Install cilium: `./40_install_cilium.sh`
 3. Enable both CNIs: `./50_calico_default.sh`
+   * if calico-node is restarted it raises error messages: `Received route 10.245.2.0/24 with strange next-hop 10.245.2.28`
 4. Switch to cilium as default: `./60_cilium_default.sh` - step not needed????
     * https://github.com/k8snetworkplumbingwg/multus-cni/pull/314
     * https://github.com/projectcalico/calico/issues/5199
